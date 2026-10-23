@@ -1,0 +1,102 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'cloud.fhwang'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testCompileOnly 'org.projectlombok:lombok'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+
+	// pdf 문서 처리
+	implementation 'org.apache.pdfbox:pdfbox:3.0.8'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+// 1단계 확인용 probe 실행: ./gradlew pdfProbe -Pfile=samples/sample.pdf
+['pdfProbe': 'PdfProbe', 'hwpxProbe': 'HwpxProbe', 'examRenderProbe': 'ExamRenderProbe', 'examParseProbe': 'ExamParseProbe'].each { task, cls ->
+	tasks.register(task, JavaExec) {
+		classpath = sourceSets.test.runtimeClasspath
+		mainClass = "cloud.fhwang.chaewon_t.probe.${cls}"
+		args = project.hasProperty('file') ? [project.property('file')] : []
+		jvmArgs = ['-Dstdout.encoding=UTF-8']
+	}
+}
+
+// 글자 모양 다수결 정확도 측정: ./gradlew glyphEvalProbe -Pfile=samples/sample.pdf[,쪽수]
+tasks.register('glyphEvalProbe', JavaExec) {
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'cloud.fhwang.chaewon_t.extract.GlyphEvalProbe'
+	args = project.hasProperty('file') ? [project.property('file')] : []
+	jvmArgs = ['-Dstdout.encoding=UTF-8', '-DnoRare=' + project.hasProperty('noRare'), '-Dprogressive=' + project.hasProperty('progressive'),
+		'-DevalDpi=' + (project.findProperty('evalDpi') ?: '300'), '-DevalTessdata=' + (project.findProperty('evalTessdata') ?: '')]
+}
+
+// 인쇄 PDF 글자 모양이 쪽마다 겹치는 정도: ./gradlew shapeCoverageProbe -Pfile=samples/sample2.pdf
+tasks.register('shapeCoverageProbe', JavaExec) {
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'cloud.fhwang.chaewon_t.extract.ShapeCoverageProbe'
+	args = project.hasProperty('file') ? [project.property('file')] : []
+	jvmArgs = ['-Dstdout.encoding=UTF-8']
+}
+
+// 프론트엔드(frontend/, React + Vite): ./gradlew build 때 npm 빌드·테스트도 돌려 깨진 화면을 같이 잡는다.
+// 화면은 jar에 넣지 않고 따로 배포한다(frontend/Dockerfile → nginx). jar는 API만 있다.
+// 백엔드만 고칠 때는 -PskipFrontend 로 건너뛴다. (Gradle Node 플러그인은 Gradle 9 호환이 불확실해 Exec로 직접 부른다)
+def frontendDir = file('frontend')
+def npm = System.getProperty('os.name').toLowerCase().contains('windows') ? 'npm.cmd' : 'npm'
+
+tasks.register('npmCi', Exec) {
+	workingDir frontendDir
+	commandLine npm, 'ci'
+	inputs.files('frontend/package.json', 'frontend/package-lock.json', 'frontend/.npmrc')
+	outputs.dir('frontend/node_modules')
+}
+
+tasks.register('npmBuild', Exec) {
+	dependsOn 'npmCi'
+	workingDir frontendDir
+	commandLine npm, 'run', 'build'
+	inputs.dir('frontend/src')
+	inputs.files('frontend/index.html', 'frontend/package-lock.json', 'frontend/tsconfig.json', 'frontend/vite.config.ts')
+	outputs.dir('frontend/dist')
+}
+
+tasks.register('npmTest', Exec) {
+	dependsOn 'npmCi'
+	workingDir frontendDir
+	commandLine npm, 'test'
+}
+
+if (!project.hasProperty('skipFrontend')) {
+	tasks.named('build') {
+		dependsOn 'npmBuild'
+	}
+	tasks.named('check') {
+		dependsOn 'npmTest'
+	}
+}

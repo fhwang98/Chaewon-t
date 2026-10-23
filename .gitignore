@@ -1,0 +1,42 @@
+### 빌드 결과 ###
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+# VS Code Java 확장이 만드는 컴파일 결과
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+### 편집기·OS ###
+.idea/
+*.iml
+out/
+.vscode/
+.DS_Store
+
+### AI 도구 설정·지침 (저장소에 넣지 않는다) ###
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+agent_docs/
+
+### chaewon-t: 개인정보·학원 자료가 들어 있을 수 있음 ###
+samples/
+data/tmp/
+probe-out/
+# 템플릿 HWPX는 학원 로고·다른 시험 내용이 들어 있어 커밋하지 않는다 (mapping.json만 커밋)
+data/templates/**/template.hwpx
+# 실수로 아무 데나 둔 시험지 PDF·HWPX도 막는다. 테스트용(민감정보를 지운 사본)만 예외
+*.pdf
+*.hwpx
+!src/test/resources/**
+
+### 받아 쓰는 데이터 ###
+# Tesseract 언어 데이터 (scripts/download-tessdata.sh로 받는다. 30MB)
+data/tessdata/

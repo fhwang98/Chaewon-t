@@ -1,0 +1,18 @@
+{
+  "documentType": "exam",
+  "version": 1,
+  "displayName": "기출문제 시험지",
+  "styles": {
+    "question":   { "paraPr": "11", "style": "1" },
+    "body":       { "paraPr": "12", "style": "2" },
+    "bodyLast":   { "paraPr": "15", "style": "2" },
+    "gap":        { "paraPr": "13", "style": "0" },
+    "choice":     { "paraPr": "14", "style": "4" },
+    "choiceLast": { "paraPr": "16", "style": "4" },
+    "spacer":     { "paraPr": "1",  "style": "0" },
+    "answer":     { "paraPr": "1",  "style": "0" },
+    "chars": { "normal": "12", "underline": "18", "bold": "14", "boldUnderline": "19", "heading": "5" },
+    "answerHeading": "< 정 답 >"
+  },
+  "pdf": { "columnSplit": 297.5, "headerBottom": 60, "footerTop": 800, "boxLineMinWidth": 240 }
+}

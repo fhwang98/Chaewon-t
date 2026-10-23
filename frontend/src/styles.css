@@ -1,0 +1,332 @@
+/*
+ * 화면 공통 색·모양. 시험지 종이 모양(쪽, 글꼴, 상자)은 HWPX와 맞춰야 해서 editor/exam.css에 따로 둔다.
+ * 주 색은 시험지 머리말 남색(#203A7B) 계열의 파랑. 흰 글자와 대비 4.5:1 이상인 값만 쓴다
+ */
+:root {
+  --bg: #eef0f3;
+  --surface: #fff;
+  --surface-muted: #f6f7f9;
+  --text: #1f2328;
+  --text-muted: #59636e;
+  --border: #d0d7de;
+  --border-soft: #e6e9ed;
+  --hover: #eef1f6;
+  --accent: #2b59c3;
+  --accent-hover: #2349a3;
+  --accent-soft: #e8eefb;
+  --accent-ring: #8fa8e8;
+  --danger: #c62828;
+  --danger-soft: #fdecec;
+  --success: #1a7f37;
+  --warn: #9a6700;
+  --mark: #ffe97a;
+  --radius: 6px;
+  --radius-lg: 12px;
+  --shadow: 0 1px 2px rgb(31 35 40 / 0.06), 0 4px 16px rgb(31 35 40 / 0.06);
+  --ease: 150ms ease;
+  --header-h: 48px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.app-header .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+.app-header .brand svg {
+  color: var(--accent);
+}
+
+/* 업로드·읽기·오류 화면: 가운데 카드 하나 */
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px 16px 60px;
+}
+.page.narrow {
+  max-width: 640px;
+}
+.card {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.card > * {
+  margin: 0;
+}
+.card > * + * {
+  margin-top: 16px;
+}
+.card .lead {
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.error {
+  color: var(--danger);
+}
+.ok {
+  color: var(--success);
+}
+.notice.error {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+}
+
+/* 단추. <a>나 <span>도 class="button"이면 같은 모양 */
+button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: inherit;
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: background-color var(--ease), border-color var(--ease), color var(--ease);
+}
+button:hover:not(:disabled),
+.button:hover {
+  background: var(--surface-muted);
+}
+button.primary,
+.button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+button.primary:hover:not(:disabled),
+.button.primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+button.link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  text-align: left;
+}
+
+/* 키보드로 옮겨 온 곳은 언제나 보이게 (마우스로 누를 때는 그리지 않는다) */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 단계 표시: 1 PDF 올리기 → 2 읽기 → 3 고치고 내려받기 */
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.step-no {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+}
+.steps li.current {
+  color: var(--text);
+  font-weight: 600;
+}
+.steps li.current .step-no {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.steps li.done .step-no {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* 업로드 */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 44px 20px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-muted);
+  text-align: center;
+  cursor: pointer;
+  transition: background-color var(--ease), border-color var(--ease);
+}
+.dropzone:hover,
+.dropzone.over {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.dropzone:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.dropzone.busy {
+  cursor: progress;
+}
+.dropzone-icon {
+  color: var(--accent);
+}
+.dropzone-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+/* 읽기 진행 */
+.progress-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border-soft);
+}
+.progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 400ms ease;
+}
+
+.spinner {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 에디터 화면: 회색 바탕 위 종이 (exam.css) */
+.editor-page {
+  background: #e9eaee;
+  min-height: calc(100vh - var(--header-h));
+}
+.save-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+/* 저장 상태 점: 저장됨 초록, 고치는 중·저장 중 노랑, 실패 빨강 */
+.save-state::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.save-state.dirty::before,
+.save-state.saving::before {
+  background: #d4a72c;
+}
+.save-state.error {
+  color: var(--danger);
+}
+.save-state.error::before {
+  background: var(--danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

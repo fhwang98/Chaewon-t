@@ -1,0 +1,39 @@
+# VM 배포: docker compose up -d --build  →  http://<VM 주소>/
+# 처음 한 번 VM에 템플릿을 복사해 둔다: data/templates/exam/v1/template.hwpx (git에 없음)
+#
+# 컨테이너 셋. 밖에 열린 포트는 nginx(80) 하나이고, frontend·backend는 compose 내부 네트워크에서 이름으로 찾는다
+#   nginx    : /api/ → backend, 그 밖 → frontend
+#   frontend : React 빌드 결과를 내주는 nginx
+#   backend  : Spring Boot + Tesseract
+services:
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+
+  frontend:
+    build: ./frontend
+    image: chaewon-t-frontend
+    restart: unless-stopped
+
+  backend:
+    build: .
+    image: chaewon-t-backend
+    restart: unless-stopped
+    environment:
+      # OCR 동시 실행 수. 0 = CPU 수의 절반. VM CPU가 적으면 1~2로 둔다
+      CHAEWON_OCR_THREADS: "0"
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60"
+    volumes:
+      # 템플릿은 이미지에 넣지 않고 VM의 파일을 읽기 전용으로 붙인다 (mapping.json은 이미지에도 있지만 같이 덮인다)
+      - ./data/templates:/app/data/templates:ro
+      - work:/app/data/tmp
+
+volumes:
+  work:

@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: chaewon-t
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+chaewon:
+  template-dir: data/templates
+  tmp-dir: data/tmp
+  retention: 1h          # 작업 폴더 보관 시간
+  cleanup-interval: PT10M # 만료 폴더 정리 주기 (ISO-8601)
+  max-pdf-pages: 100
+  template: exam          # data/templates 아래 사용할 템플릿 종류
+  ocr:                    # 글자 정보 없는 PDF(스캔본·인쇄 PDF)를 읽는 Tesseract
+    command: tesseract
+    tessdata-dir: data/tessdata   # scripts/download-tessdata.sh 로 받는다. 없으면 Tesseract 기본 위치
+    languages: kor+eng
+    dpi: 300
+    threads: 0            # 동시에 돌릴 Tesseract 수. 0 = CPU 수의 절반
+    page-timeout: 2m
+
+logging:
+  level:
+    # 글꼴 경고(글자 코드마다 "No Unicode mapping …")가 페이지당 수십 줄씩 쌓인다. 문서 내용은 없지만 로그를 덮어 버린다
+    org.apache.pdfbox: error
+    org.apache.fontbox: error

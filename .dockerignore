@@ -1,0 +1,12 @@
+# 백엔드 이미지 빌드에 보내지 않을 것 (개인정보 가능 파일, 빌드 결과, 큰 폴더, 따로 빌드하는 화면·nginx)
+.git
+.gradle
+build
+samples
+probe-out
+data/tmp
+data/tessdata
+data/templates/**/template.hwpx
+frontend
+nginx
+**/.DS_Store
