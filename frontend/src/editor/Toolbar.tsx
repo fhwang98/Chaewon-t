@@ -85,6 +85,12 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
   }, [editor]);
 
   const chain = () => editor.chain().focus();
+  // 빈 값('기본')은 직접 넣은 값을 지워 역할 서식을 따르게 한다
+  const setFontSize = (value: string) => (value
+    ? chain().setMark('fontSize', { size: Number(value) }).run()
+    : chain().unsetMark('fontSize').run());
+  const setFirstLine = (value: string) =>
+    chain().updateAttributes('paragraph', { firstLine: value === '' ? null : Number(value) }).run();
 
   return (
     <div className="toolbar" role="toolbar" aria-label="편집 도구">
@@ -118,9 +124,7 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
 
       <div className="toolbar-row">
         <select value={state.size ?? ''} aria-label="글자 크기" title="글자 크기 (pt). 기본은 역할 크기"
-          onChange={(e) => (e.target.value
-            ? chain().setMark('fontSize', { size: Number(e.target.value) }).run()
-            : chain().unsetMark('fontSize').run())}>
+          onChange={(e) => setFontSize(e.target.value)}>
           <option value="">크기 기본</option>
           {FONT_SIZES.map((s) => <option key={s} value={s}>{s}pt</option>)}
         </select>
@@ -144,7 +148,7 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
         <button type="button" className="icon" title="들여쓰기 늘리기 (10pt)" aria-label="들여쓰기 늘리기"
           onClick={() => changeIndent(editor, 1)}><Icon d="M21 5H11M21 10H11M21 15H11M21 20H3M3 8l4 4-4 4" /></button>
         <select value={state.firstLine ?? ''} aria-label="첫 줄"
-          onChange={(e) => chain().updateAttributes('paragraph', { firstLine: e.target.value === '' ? null : Number(e.target.value) }).run()}>
+          onChange={(e) => setFirstLine(e.target.value)}>
           {FIRST_LINE.map((f) => <option key={f.label} value={f.value ?? ''}>{f.label}</option>)}
         </select>
         <span className="sep" />
@@ -254,17 +258,23 @@ function FindPanel({ editor, onClose }: { editor: Editor; onClose: () => void })
   useEffect(() => setSearch(editor, query), [editor, query]);
 
   const next = () => setMessage(count === 0 ? '찾는 말이 없습니다.' : `${findNext(editor, query)} / ${count}`);
+  // 바꾸면 남은 수가 줄어 count(그릴 때 센 값) 대신 다시 센다
+  const replace = () => {
+    const n = replaceNext(editor, query, replacement);
+    setMessage(n ? `${n} / ${findMatches(editor.state, query).length}` : '더 없습니다.');
+  };
+  const closeOnEscape = (e: { key: string }) => {
+    if (e.key === 'Escape') onClose();
+  };
   return (
     <div className="toolbar-panel find" role="search">
       <input ref={input} value={query} placeholder="찾을 말" aria-label="찾을 말"
         onChange={(e) => { setQuery(e.target.value); setMessage(''); }}
-        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); next(); } if (e.key === 'Escape') onClose(); }} />
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); next(); } closeOnEscape(e); }} />
       <button type="button" className="text-btn" disabled={!query} onClick={next}>다음 찾기</button>
       <input value={replacement} placeholder="바꿀 말" aria-label="바꿀 말"
-        onChange={(e) => setReplacement(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }} />
-      <button type="button" className="text-btn" disabled={!query}
-        onClick={() => { const n = replaceNext(editor, query, replacement); setMessage(n ? `${n} / ${findMatches(editor.state, query).length}` : '더 없습니다.'); }}>바꾸기</button>
+        onChange={(e) => setReplacement(e.target.value)} onKeyDown={closeOnEscape} />
+      <button type="button" className="text-btn" disabled={!query} onClick={replace}>바꾸기</button>
       <button type="button" className="text-btn" disabled={!query}
         onClick={() => setMessage(`${replaceAll(editor, query, replacement)}곳을 바꿨습니다.`)}>모두 바꾸기</button>
       <span className="find-count">{message || (query ? `${count}곳` : '')}</span>
