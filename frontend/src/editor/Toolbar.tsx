@@ -162,9 +162,12 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
   );
 }
 
+/** 단추를 눌러도 에디터에서 고른 곳이 풀리지 않게 mousedown 기본 동작을 막는다 */
+const keepSelection = (e: { preventDefault: () => void }) => e.preventDefault();
+
 /**
  * 글자 색: 누르면 색 판이 열린다. 자주 쓰는 색, 기본(검정으로 되돌림), 다른 색(브라우저 색 고르기).
- * 판의 단추는 누를 때 에디터 선택이 풀리지 않게 mousedown 기본 동작을 막는다
+ * 판의 단추는 keepSelection으로 에디터 선택을 지킨다
  */
 function ColorPicker({ editor, color }: { editor: Editor; color: string | null }) {
   const [open, setOpen] = useState(false);
@@ -188,7 +191,7 @@ function ColorPicker({ editor, color }: { editor: Editor; color: string | null }
   return (
     <div className="color-menu" ref={box}>
       <button type="button" className={on('color-button', open)} title="글자 색" aria-label="글자 색"
-        aria-expanded={open} onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen(!open)}>
+        aria-expanded={open} onMouseDown={keepSelection} onClick={() => setOpen(!open)}>
         <span className="color-letter" style={{ borderBottomColor: color ?? '#000000' }}>가</span>
         <span className="caret" aria-hidden="true">▾</span>
       </button>
@@ -198,10 +201,10 @@ function ColorPicker({ editor, color }: { editor: Editor; color: string | null }
             {COLORS.map((c) => (
               <button key={c.value} type="button" className={on('swatch', color === c.value)} title={c.label}
                 aria-label={c.label} style={{ background: c.value }}
-                onMouseDown={(e) => e.preventDefault()} onClick={() => apply(c.value)} />
+                onMouseDown={keepSelection} onClick={() => apply(c.value)} />
             ))}
           </div>
-          <button type="button" className="text-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => apply(null)}>
+          <button type="button" className="text-btn" onMouseDown={keepSelection} onClick={() => apply(null)}>
             기본 (검정)
           </button>
           <label className="text-btn other-color">
