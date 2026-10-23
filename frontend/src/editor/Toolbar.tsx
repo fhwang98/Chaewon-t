@@ -1,11 +1,12 @@
 import { useEditorState, type Editor } from '@tiptap/react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import {
-  clearAllUncertain, clearUncertain, selectNextUncertain, selectRange, uncertainList, uncertainRanges,
-} from './extensions';
-import {
-  changeIndent, clearFormatting, findMatches, findNext, replaceAll, replaceNext, setSearch, type Align,
-} from './formatting';
+import { useEffect, useState, type ReactNode } from 'react';
+import { on } from './buttons';
+import CheckList from './CheckList';
+import ColorPicker from './ColorPicker';
+import { clearUncertain, selectNextUncertain, uncertainRanges } from './extensions';
+import FindPanel from './FindPanel';
+import { changeIndent, clearFormatting, type Align } from './formatting';
+import { AlignIcon, Icon } from './icons';
 
 const FONT_SIZES = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24];
 const FIRST_LINE: { label: string; value: number | null }[] = [
@@ -26,15 +27,6 @@ const ALIGNS: { value: Align; label: string }[] = [
   { value: 'right', label: '오른쪽 정렬' },
   { value: 'justify', label: '양쪽 정렬' },
 ];
-/** 글자 색 고르기 판의 색 (한글 기본 색 일부) */
-const COLORS = [
-  { value: '#000000', label: '검정' }, { value: '#ff0000', label: '빨강' }, { value: '#0000ff', label: '파랑' },
-  { value: '#008000', label: '초록' }, { value: '#ff6600', label: '주황' }, { value: '#800080', label: '보라' },
-  { value: '#203a7b', label: '남색' }, { value: '#808080', label: '회색' },
-];
-
-/** 켜진 단추에 붙이는 'on' 클래스 */
-const on = (className: string, active: boolean) => (active ? `${className} on` : className);
 
 interface Props {
   editor: Editor;
@@ -159,153 +151,5 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
       {panel === 'find' && <FindPanel editor={editor} onClose={() => setPanel(null)} />}
       {panel === 'checks' && <CheckList editor={editor} onClose={() => setPanel(null)} />}
     </div>
-  );
-}
-
-/** 단추를 눌러도 에디터에서 고른 곳이 풀리지 않게 mousedown 기본 동작을 막는다 */
-const keepSelection = (e: { preventDefault: () => void }) => e.preventDefault();
-
-/**
- * 글자 색: 누르면 색 판이 열린다. 자주 쓰는 색, 기본(검정으로 되돌림), 다른 색(브라우저 색 고르기).
- * 판의 단추는 keepSelection으로 에디터 선택을 지킨다
- */
-function ColorPicker({ editor, color }: { editor: Editor; color: string | null }) {
-  const [open, setOpen] = useState(false);
-  const box = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent) => {
-      if (!box.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, [open]);
-
-  const apply = (value: string | null) => {
-    const chain = editor.chain().focus();
-    (value ? chain.setMark('fontColor', { color: value }) : chain.unsetMark('fontColor')).run();
-    setOpen(false);
-  };
-
-  return (
-    <div className="color-menu" ref={box}>
-      <button type="button" className={on('color-button', open)} title="글자 색" aria-label="글자 색"
-        aria-expanded={open} onMouseDown={keepSelection} onClick={() => setOpen(!open)}>
-        <span className="color-letter" style={{ borderBottomColor: color ?? '#000000' }}>가</span>
-        <span className="caret" aria-hidden="true">▾</span>
-      </button>
-      {open && (
-        <div className="color-palette" role="dialog" aria-label="글자 색 고르기">
-          <div className="swatches">
-            {COLORS.map((c) => (
-              <button key={c.value} type="button" className={on('swatch', color === c.value)} title={c.label}
-                aria-label={c.label} style={{ background: c.value }}
-                onMouseDown={keepSelection} onClick={() => apply(c.value)} />
-            ))}
-          </div>
-          <button type="button" className="text-btn" onMouseDown={keepSelection} onClick={() => apply(null)}>
-            기본 (검정)
-          </button>
-          <label className="text-btn other-color">
-            다른 색…
-            <input type="color" value={color ?? '#000000'} aria-label="다른 색"
-              onChange={(e) => apply(e.target.value)} />
-          </label>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** 확인할 곳 전체 목록. 누르면 그 자리로 간다. 고치면 목록에서 저절로 빠진다 */
-function CheckList({ editor, onClose }: { editor: Editor; onClose: () => void }) {
-  const items = useEditorState({ editor, selector: ({ editor }) => uncertainList(editor.state) });
-  return (
-    <div className="toolbar-panel checks" role="dialog" aria-label="확인할 곳 목록">
-      <div className="checks-head">
-        <strong>확인할 곳 {items.length}개</strong>
-        <span className="hint">글자 인식(OCR)이 확실하지 않은 곳입니다. 고치거나 "확인함"을 누르면 목록에서 빠집니다.</span>
-        <button type="button" className="text-btn" disabled={items.length === 0}
-          title="표시를 모두 지웁니다 (Ctrl+Z로 되돌릴 수 있습니다)" onClick={() => clearAllUncertain(editor)}>모두 확인함</button>
-        <button type="button" className="text-btn" onClick={onClose}>닫기</button>
-      </div>
-      <ol className="checks-list">
-        {items.map((item) => (
-          <li key={item.from}>
-            <button type="button" onClick={() => selectRange(editor, item)}>
-              <span className="checks-where">{item.question > 0 ? `${item.question}번` : '정답'}</span>
-              <span className="checks-text">
-                {item.before && '…'}{item.before}<mark>{item.text}</mark>{item.after}{item.after && '…'}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-/** 찾기·바꾸기 줄. 열려 있는 동안 일치하는 곳을 문서에 표시한다 */
-function FindPanel({ editor, onClose }: { editor: Editor; onClose: () => void }) {
-  const [query, setQuery] = useState('');
-  const [replacement, setReplacement] = useState('');
-  const [message, setMessage] = useState('');
-  const input = useRef<HTMLInputElement>(null);
-  const count = query ? findMatches(editor.state, query).length : 0;
-
-  useEffect(() => {
-    input.current?.focus();
-    return () => setSearch(editor, '');
-  }, [editor]);
-  useEffect(() => setSearch(editor, query), [editor, query]);
-
-  const next = () => setMessage(count === 0 ? '찾는 말이 없습니다.' : `${findNext(editor, query)} / ${count}`);
-  // 바꾸면 남은 수가 줄어 count(그릴 때 센 값) 대신 다시 센다
-  const replace = () => {
-    const n = replaceNext(editor, query, replacement);
-    setMessage(n ? `${n} / ${findMatches(editor.state, query).length}` : '더 없습니다.');
-  };
-  const closeOnEscape = (e: { key: string }) => {
-    if (e.key === 'Escape') onClose();
-  };
-  return (
-    <div className="toolbar-panel find" role="search">
-      <input ref={input} value={query} placeholder="찾을 말" aria-label="찾을 말"
-        onChange={(e) => { setQuery(e.target.value); setMessage(''); }}
-        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); next(); } closeOnEscape(e); }} />
-      <button type="button" className="text-btn" disabled={!query} onClick={next}>다음 찾기</button>
-      <input value={replacement} placeholder="바꿀 말" aria-label="바꿀 말"
-        onChange={(e) => setReplacement(e.target.value)} onKeyDown={closeOnEscape} />
-      <button type="button" className="text-btn" disabled={!query} onClick={replace}>바꾸기</button>
-      <button type="button" className="text-btn" disabled={!query}
-        onClick={() => setMessage(`${replaceAll(editor, query, replacement)}곳을 바꿨습니다.`)}>모두 바꾸기</button>
-      <span className="find-count">{message || (query ? `${count}곳` : '')}</span>
-      <button type="button" className="text-btn" onClick={onClose}>닫기</button>
-    </div>
-  );
-}
-
-/** 선으로 그린 아이콘 (24 칸 좌표, Lucide 모양을 따름). 글자 화살표(↶ ⇤)는 글꼴마다 모양·크기가 달라 SVG로 그린다 */
-function Icon({ d }: { d: string }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={d} />
-    </svg>
-  );
-}
-
-function AlignIcon({ align }: { align: Align }) {
-  // 네 줄: 정렬에 따라 짧은 줄의 위치가 다르다
-  const lines = [16, 10, 16, 12];
-  return (
-    <svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true">
-      {lines.map((w, i) => {
-        const width = align === 'justify' ? 16 : w;
-        const x = align === 'left' || align === 'justify' ? 0 : align === 'right' ? 16 - width : (16 - width) / 2;
-        return <rect key={i} x={x} y={i * 4} width={width} height="2" fill="currentColor" />;
-      })}
-    </svg>
   );
 }
