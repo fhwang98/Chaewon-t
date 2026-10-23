@@ -97,15 +97,8 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
         <button type="button" className={on('text-btn', panel === 'find')} title="찾기·바꾸기 (Ctrl+F)"
           onClick={() => setPanel(panel === 'find' ? null : 'find')}>찾기·바꾸기</button>
         {state.uncertain > 0 && (
-          <>
-            <span className="sep" />
-            <button type="button" className="check-next" title="글자 인식(OCR)이 확실하지 않아 노랗게 표시한 곳으로 갑니다. 고치면 표시가 사라집니다"
-              onClick={() => selectNextUncertain(editor)}>확인할 곳 {state.uncertain}개 <Icon d="m9 6 6 6-6 6" /></button>
-            <button type="button" className="text-btn" disabled={!state.inUncertain} title="맞게 읽은 곳이면 표시를 지웁니다"
-              onClick={() => clearUncertain(editor)}>확인함</button>
-            <button type="button" className={on('text-btn', panel === 'checks')} title="확인할 곳 전체 목록"
-              onClick={() => setPanel(panel === 'checks' ? null : 'checks')}>목록</button>
-          </>
+          <UncertainControls editor={editor} count={state.uncertain} inUncertain={state.inUncertain}
+            listOpen={panel === 'checks'} onToggleList={() => setPanel(panel === 'checks' ? null : 'checks')} />
         )}
         <span className="sep" />
         <select value={zoom} aria-label="확대" onChange={(e) => onZoom(Number(e.target.value))}>
@@ -151,5 +144,22 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
       {panel === 'find' && <FindPanel editor={editor} onClose={() => setPanel(null)} />}
       {panel === 'checks' && <CheckList editor={editor} onClose={() => setPanel(null)} />}
     </div>
+  );
+}
+
+/** 확인할 곳(OCR이 확실하지 않은 곳): 다음 곳으로 가기, 지금 곳 확인함, 전체 목록 열기 */
+function UncertainControls({ editor, count, inUncertain, listOpen, onToggleList }: {
+  editor: Editor; count: number; inUncertain: boolean; listOpen: boolean; onToggleList: () => void;
+}) {
+  return (
+    <>
+      <span className="sep" />
+      <button type="button" className="check-next" title="글자 인식(OCR)이 확실하지 않아 노랗게 표시한 곳으로 갑니다. 고치면 표시가 사라집니다"
+        onClick={() => selectNextUncertain(editor)}>확인할 곳 {count}개 <Icon d="m9 6 6 6-6 6" /></button>
+      <button type="button" className="text-btn" disabled={!inUncertain} title="맞게 읽은 곳이면 표시를 지웁니다"
+        onClick={() => clearUncertain(editor)}>확인함</button>
+      <button type="button" className={on('text-btn', listOpen)} title="확인할 곳 전체 목록"
+        onClick={onToggleList}>목록</button>
+    </>
   );
 }
