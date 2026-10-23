@@ -13,6 +13,13 @@ const FIRST_LINE: { label: string; value: number | null }[] = [
   { label: '첫 줄 들여쓰기', value: 10 },
   { label: '첫 줄 내어쓰기', value: -10 },
 ];
+/** 켜고 끄는 글자 모양. toggleBold() 등은 모두 toggleMark(이름)과 같다 */
+const MARKS: { mark: 'bold' | 'italic' | 'underline' | 'strike'; label: string; keys: string; icon: ReactNode }[] = [
+  { mark: 'bold', label: '굵게', keys: 'Ctrl+B', icon: <b>가</b> },
+  { mark: 'italic', label: '기울임', keys: 'Ctrl+I', icon: <i>가</i> },
+  { mark: 'underline', label: '밑줄', keys: 'Ctrl+U', icon: <u>가</u> },
+  { mark: 'strike', label: '취소선', keys: 'Ctrl+Shift+S', icon: <s>가</s> },
+];
 const ALIGNS: { value: Align; label: string }[] = [
   { value: 'left', label: '왼쪽 정렬' },
   { value: 'center', label: '가운데 정렬' },
@@ -115,14 +122,10 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
           {FONT_SIZES.map((s) => <option key={s} value={s}>{s}pt</option>)}
         </select>
         <span className="sep" />
-        <button type="button" className={`icon${state.bold ? ' on' : ''}`} title="굵게 (Ctrl+B)" aria-label="굵게"
-          onClick={() => chain().toggleBold().run()}><b>가</b></button>
-        <button type="button" className={`icon${state.italic ? ' on' : ''}`} title="기울임 (Ctrl+I)" aria-label="기울임"
-          onClick={() => chain().toggleItalic().run()}><i>가</i></button>
-        <button type="button" className={`icon${state.underline ? ' on' : ''}`} title="밑줄 (Ctrl+U)" aria-label="밑줄"
-          onClick={() => chain().toggleUnderline().run()}><u>가</u></button>
-        <button type="button" className={`icon${state.strike ? ' on' : ''}`} title="취소선 (Ctrl+Shift+S)" aria-label="취소선"
-          onClick={() => chain().toggleStrike().run()}><s>가</s></button>
+        {MARKS.map((m) => (
+          <button key={m.mark} type="button" className={`icon${state[m.mark] ? ' on' : ''}`} title={`${m.label} (${m.keys})`}
+            aria-label={m.label} onClick={() => chain().toggleMark(m.mark).run()}>{m.icon}</button>
+        ))}
         <ColorPicker editor={editor} color={state.color} />
         <span className="sep" />
         {ALIGNS.map((a) => (
