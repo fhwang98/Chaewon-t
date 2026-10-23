@@ -33,6 +33,9 @@ const COLORS = [
   { value: '#203a7b', label: '남색' }, { value: '#808080', label: '회색' },
 ];
 
+/** 켜진 단추에 붙이는 'on' 클래스 */
+const on = (className: string, active: boolean) => (active ? `${className} on` : className);
+
 interface Props {
   editor: Editor;
   zoom: number;
@@ -93,7 +96,7 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
         <button type="button" className="icon" disabled={!state.canRedo} title="다시 하기 (Ctrl+Shift+Z)" aria-label="다시 하기"
           onClick={() => chain().redo().run()}><Icon d="m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13" /></button>
         <span className="sep" />
-        <button type="button" className={`text-btn${panel === 'find' ? ' on' : ''}`} title="찾기·바꾸기 (Ctrl+F)"
+        <button type="button" className={on('text-btn', panel === 'find')} title="찾기·바꾸기 (Ctrl+F)"
           onClick={() => setPanel(panel === 'find' ? null : 'find')}>찾기·바꾸기</button>
         {state.uncertain > 0 && (
           <>
@@ -102,7 +105,7 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
               onClick={() => selectNextUncertain(editor)}>확인할 곳 {state.uncertain}개 <Icon d="m9 6 6 6-6 6" /></button>
             <button type="button" className="text-btn" disabled={!state.inUncertain} title="맞게 읽은 곳이면 표시를 지웁니다"
               onClick={() => clearUncertain(editor)}>확인함</button>
-            <button type="button" className={`text-btn${panel === 'checks' ? ' on' : ''}`} title="확인할 곳 전체 목록"
+            <button type="button" className={on('text-btn', panel === 'checks')} title="확인할 곳 전체 목록"
               onClick={() => setPanel(panel === 'checks' ? null : 'checks')}>목록</button>
           </>
         )}
@@ -123,13 +126,13 @@ export default function Toolbar({ editor, zoom, zooms, onZoom, leading, actions 
         </select>
         <span className="sep" />
         {MARKS.map((m) => (
-          <button key={m.mark} type="button" className={`icon${state[m.mark] ? ' on' : ''}`} title={`${m.label} (${m.keys})`}
+          <button key={m.mark} type="button" className={on('icon', state[m.mark])} title={`${m.label} (${m.keys})`}
             aria-label={m.label} onClick={() => chain().toggleMark(m.mark).run()}>{m.icon}</button>
         ))}
         <ColorPicker editor={editor} color={state.color} />
         <span className="sep" />
         {ALIGNS.map((a) => (
-          <button key={a.value} type="button" className={`icon${state.align === a.value ? ' on' : ''}`} title={a.label}
+          <button key={a.value} type="button" className={on('icon', state.align === a.value)} title={a.label}
             aria-label={a.label}
             onClick={() => chain().updateAttributes('paragraph', { align: state.align === a.value ? null : a.value }).run()}>
             <AlignIcon align={a.value} />
@@ -180,7 +183,7 @@ function ColorPicker({ editor, color }: { editor: Editor; color: string | null }
 
   return (
     <div className="color-menu" ref={box}>
-      <button type="button" className={`color-button${open ? ' on' : ''}`} title="글자 색" aria-label="글자 색"
+      <button type="button" className={on('color-button', open)} title="글자 색" aria-label="글자 색"
         aria-expanded={open} onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen(!open)}>
         <span className="color-letter" style={{ borderBottomColor: color ?? '#000000' }}>가</span>
         <span className="caret" aria-hidden="true">▾</span>
@@ -189,7 +192,7 @@ function ColorPicker({ editor, color }: { editor: Editor; color: string | null }
         <div className="color-palette" role="dialog" aria-label="글자 색 고르기">
           <div className="swatches">
             {COLORS.map((c) => (
-              <button key={c.value} type="button" className={`swatch${color === c.value ? ' on' : ''}`} title={c.label}
+              <button key={c.value} type="button" className={on('swatch', color === c.value)} title={c.label}
                 aria-label={c.label} style={{ background: c.value }}
                 onMouseDown={(e) => e.preventDefault()} onClick={() => apply(c.value)} />
             ))}
